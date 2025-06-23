@@ -8,6 +8,7 @@ import ait.cohort5860.student.dto.StudentUpdateDto;
 import ait.cohort5860.student.dto.exceptions.NotFoundException;
 import ait.cohort5860.student.model.Student;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,14 +18,14 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
     private final StudentRepository studentRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     public Boolean addStudent(StudentCredentialsDto studentCredentialsDto) {
         if (studentRepository.findById(studentCredentialsDto.getId()).isPresent()) {
             return false;
         }
-        Student student = new Student(studentCredentialsDto.getId(), studentCredentialsDto.getName(),
-                studentCredentialsDto.getPassword());
+        Student student = modelMapper.map(studentCredentialsDto, Student.class);
         studentRepository.save(student);
         return true;
     }
@@ -32,7 +33,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentDto findStudent(Long id) {
         Student student = studentRepository.findById(id).orElseThrow(NotFoundException::new);
-        return new StudentDto(student.getId(), student.getName(), student.getScores());
+        return modelMapper.map(student, StudentDto.class);
     }
 
     @Override
