@@ -2,6 +2,7 @@ package ait.cohort5860.student.service;
 
 import ait.cohort5860.configuration.ServiceConfiguration;
 import ait.cohort5860.student.dao.StudentRepository;
+import ait.cohort5860.student.dto.ScoreDto;
 import ait.cohort5860.student.dto.StudentCredentialsDto;
 import ait.cohort5860.student.dto.StudentDto;
 import ait.cohort5860.student.dto.StudentUpdateDto;
@@ -15,7 +16,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -124,5 +128,64 @@ public class StudentServiceTest {
         assertEquals(newName, studentCredentialsDto.getName());
         assertEquals(password, studentCredentialsDto.getPassword());
         verify(studentRepository, times(1)).save(any(Student.class));
+    }
+
+    @Test
+    void testAddScore() {
+        // Arrange
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+        String examName = "Math";
+        int score = 90;
+        ScoreDto scoreDto = new ScoreDto(examName, score);
+
+        // Act
+        Boolean result = studentService.addScore(studentId, scoreDto);
+
+        // Assert
+        assertTrue(result);
+        verify(studentRepository, times(1)).save(any(Student.class));
+    }
+
+    @Test
+    void testFindStudentsByName() {
+        // Arrange
+        when(studentRepository.findByNameIgnoreCase(name)).thenReturn(Stream.of(student));
+
+        // Act
+        List<StudentDto> result = studentService.findStudentsByName(name);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(name, result.get(0).getName());
+    }
+
+    @Test
+    void testGetStudentsQuantityByNames() {
+        // Arrange
+        Set<String> names = Set.of("John", "Peter");
+        when(studentRepository.countByNameInIgnoreCase(names)).thenReturn(2L);
+
+        // Act
+        Long result = studentService.countStudentsByNames(names);
+
+        // Assert
+        assertEquals(2L, result);
+    }
+
+    @Test
+    void testFindStudentsByExamMinScore() {
+        // Arrange
+        String examName = "Math";
+        int score = 90;
+        when(studentRepository.findByExamAndScoreGreaterThan(examName, score)).thenReturn(Stream.of(student));
+
+        // Act
+        List<StudentDto> result = studentService.findStudentsByExamNameMinScore(examName, score);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(name, result.get(0).getName());
     }
 }
